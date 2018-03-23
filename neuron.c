@@ -6,7 +6,7 @@
 #include "neuron.h"
 
 enum NEURON_PARAMS {
-    HYPERPOLARIZATION   =   -2000,
+    HYPERPOLARIZATION   =   -5000,
     FIRE_TIME           =   3
 };
 

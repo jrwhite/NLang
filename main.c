@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <assert.h>
+
 #include "neuron.h"
 #include "synapse.h"
 #include "swim_world.h"
 
-#define INTERNEURON     {0, 1000, false}
+#define INTERNEURON     {0, 10000, false, 0}
+#define ATTACH_LOGGER(syn)  syn.logger = log_firing_rate;
 
 void test_synapse() {
     const uint8_t num_neurons = 7;
@@ -115,15 +117,18 @@ void test_swim_world() {
     const int num_synapses = 4;
     Synapse s[] = {
             // sensory processing
-            {false, 1000, dark_sensory_n, inter1_n},
-            {false, 1000, light_sensory_n, inter2_n},
+            {false, 10000, dark_sensory_n, inter1_n},
+            {false, 10000, light_sensory_n, inter2_n},
             // proportional control
-            {false, 1000, inter1_n, x_pos_motor_n},
-            {false, 1000, inter2_n, x_neg_motor_n},
+            {false, 100, inter1_n, x_pos_motor_n},
+            {false, 100, inter2_n, x_neg_motor_n},
             // integral control
     };
 
-    const int num_timesteps = 10000;
+//    ATTACH_LOGGER(s[3]);
+    ATTACH_LOGGER(s[1]);
+
+    const int num_timesteps = 100;
     int t = 0;
     int i;
 
@@ -133,8 +138,8 @@ void test_swim_world() {
 //        print_obj_info(obj);
 
         // proc sensory neurons
-        excite_neuron(light_sensory_n, 10 * get_light(obj));
-        excite_neuron(dark_sensory_n, 10 * get_dark(obj));
+        excite_neuron(light_sensory_n, 100 * get_light(obj));
+        excite_neuron(dark_sensory_n, 100 * get_dark(obj));
 
         // proc neurons
         for (i = 0; i < num_neurons; i++) {
@@ -150,14 +155,14 @@ void test_swim_world() {
 //        printf("Motor potential %d\n", x_pos_motor_n->potential);
         // temporarily use the new_force stager
         new_force = obj.kin->pos.x <= 15 ? 0.1 : -0.1;
-        proc_obj(obj, (Vector) {(x_pos_motor_n->is_firing ? new_force : 0),
-                                y_motor_n->is_firing ? 0.1 : 0}
-        );
+        new_force *= (double) x_pos_motor_n->potential;
+        new_force /= 10000.0;
+        proc_obj(obj, (Vector) { new_force, 0});
 //        printf("\n");
-//        printf("%d ", x_pos_motor_n->potential);
+        printf("%d ", x_pos_motor_n->potential);
 //        printf("%f ", obj.kin->vel.x);
 //        if (t % 10 == 0) printf("%d, ", get_dark(obj));
-        if (t % 100 == 0) printf("%d, ", (int) obj.kin->pos.x);
+//        if (t % 100 == 0) printf("%d, ", (int) obj.kin->pos.x);
 //        if (t % 10 == 0) printf("%f, ", obj.kin->vel.x);
 //        if (t % 10 == 0) printf("%d, ", dark_sensory_n->potential);
 //        if (t % 100 == 0) printf("%d, ", get_light(obj));
@@ -166,10 +171,74 @@ void test_swim_world() {
     des_obj(obj);
 }
 
+void test_dk_path(){
+    const int num_neurons = 4;
+    Neuron n[] = {
+            [0 ... 3] = INTERNEURON
+    };
+
+    Neuron * prop_n = &n[0];
+    Neuron * beta_prop_n = &n[1];
+    Neuron * beta2_prop_n = &n[2];
+    Neuron * delta_n = &n[3];
+
+    const int num_synapses = 5;
+    Synapse s[] = {
+            {.weighting = 6000, .axon_n = prop_n, .dendrite_n = beta_prop_n, .ap_buf = (ApBuf []) {NULL, NULL, 100}},
+            {false, -40, beta_prop_n, prop_n, .ap_buf =(ApBuf []) {NULL, NULL, 100}},
+            {false, 100, beta_prop_n, beta2_prop_n, .ap_buf = (ApBuf []) {NULL, NULL, 20}},
+            {false, -60, beta2_prop_n, prop_n, .ap_buf = (ApBuf []) {NULL, NULL, 20}},
+            {false, 100, prop_n, delta_n, .ap_buf = (ApBuf []) {NULL, NULL, 20}}
+    };
+
+    ATTACH_LOGGER(s[0]);
+
+    const int num_timesteps = 1000;
+    uint32_t t, i;
+    for (t = 0; t < num_timesteps; t++) {
+        if (t % 10 == 0) excite_neuron(prop_n, 6000);
+        for (i = 0; i < num_neurons; i++) {
+            proc_neuron(&n[i]);
+        }
+        for (i = 0; i < num_synapses; i++) {
+            proc_synapse(&s[i]);
+        }
+//        printf("%d\n", );
+    }
+}
+
+void test_ap_prop() {
+    Neuron n[] = {
+            [0 ... 1] = INTERNEURON
+    };
+
+    Neuron * n1 = &n[0];
+    Neuron * n2 = &n[1];
+
+    Synapse s[] = {
+            {.weighting = 1000, .axon_n = n1, .dendrite_n = n2, .ap_buf = (ApBuf []) {NULL, NULL, 20}}
+    };
+
+    ATTACH_LOGGER(s[0]);
+
+    const int num_timesteps = 100;
+    uint32_t  t, i;
+    for (t = 0; t < num_timesteps; t++) {
+//        printf("next delay %d\n", s[0].ap_buf->next_delay);
+//        printf("%d\n", n2->potential);
+        if (t % 5 == 0) excite_neuron(n1, 15000);
+        proc_neuron(n1);
+        proc_neuron(n2);
+        proc_synapse(&s[0]);
+    }
+}
+
 int main() {
 //    test_synapse();
 //    test_swim_world_init();
 //    test_swim_world_physics();
-    test_swim_world();
+//    test_swim_world();
+    test_dk_path();
+//    test_ap_prop();
     return 0;
 }

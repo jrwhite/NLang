@@ -45,7 +45,7 @@ ObjToken init_obj() {
 
     // start the object in the center
 //    new_kin->pos = (Vector) {WORLD_SIZE_X / 2, WORLD_SIZE_Y / 2};
-    new_kin->pos = (Vector) {5, 15};
+    new_kin->pos = (Vector) {15, 15};
     new_kin->vel = (Vector) {0, 0};
 
     return (ObjToken) {new_kin};
