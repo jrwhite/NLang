@@ -3,4 +3,4 @@ project(spikenet C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(spikenet main.c neuron.c neuron.h synapse.c synapse.h swim_world.c swim_world.h sensory_neuron.c sensory_neuron.h motor_neuron.c motor_neuron.h)
+add_executable(spikenet main.c common.c common.h neuron.c neuron.h synapse.c synapse.h swim_world.c swim_world.h sensory_neuron.c sensory_neuron.h motor_neuron.c motor_neuron.h logger.c logger.h synapse.h)
