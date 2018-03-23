@@ -43,9 +43,9 @@ bool send_ap(ApBuf *ap) {
     }
     assert(front);
 
-    if (front->delay-- == 0) {
+    Ap *next = ap->front->next;
+    if (--front->delay == 0) {
         ap->front = ap->front->next;
-        free(front);
         return true;
     }
 
@@ -70,6 +70,7 @@ void add_ap(ApBuf *ap) {
     }
     assert(ap->rear);
     assert(ap->front);
+//    printf("%d\n", ap->next_delay);
     ap->next_delay = 0;
 }
 
@@ -84,9 +85,10 @@ void proc_synapse(Synapse *s) {
 void log_firing_rate(Synapse *s) {
     s->period_t += 1;
     if (s->axon_n->fire_t == 1) {
-        printf("period %d\n", s->period_t);
+        printf("%d,\n", s->period_t);
         s->period_t = 0;
     }
+//    if (s->ap_buf->front && s->ap_buf->front->delay == 1) printf("firing... ");
 }
 
 void deinit_synapse(Synapse *s) {

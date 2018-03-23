@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "common.h"
 #include "neuron.h"
 
 #define AP_BUFSIZ 5
@@ -21,7 +20,7 @@ typedef struct Ap {
 typedef struct ApBuf {
     Ap *front;
     Ap *rear;
-    uint8_t next_delay;
+    int next_delay;
 } ApBuf;
 
 typedef struct Synapse {

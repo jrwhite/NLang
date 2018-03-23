@@ -22,8 +22,8 @@ enum {
 };
 
 const int32_t light[WORLD_SIZE_X][WORLD_SIZE_Y];
-Vector current_force = {0, 0};
-Vector current_vel = {0, 0};
+Vector current_force = {0.000, 0};
+Vector current_vel = {0.01, 0};
 
 void init_world() {
     // make light gradient
@@ -45,7 +45,7 @@ ObjToken init_obj() {
 
     // start the object in the center
 //    new_kin->pos = (Vector) {WORLD_SIZE_X / 2, WORLD_SIZE_Y / 2};
-    new_kin->pos = (Vector) {15, 15};
+    new_kin->pos = (Vector) {8.0, 15.0};
     new_kin->vel = (Vector) {0, 0};
 
     return (ObjToken) {new_kin};
